@@ -56,8 +56,12 @@ def process_poems(file_name):
         all_words += [word for word in poem]  # (word for word in poem) 也可
     # 这里根据包含了每个字对应的频率
     counter = collections.Counter(all_words)  # 返回得到的是 Counter({'花': 6, '梦': 5, '春': 5, '归': 4}) 的 KV对
-    count_pairs = sorted(counter.items(), key=lambda x: -x[1])  # lambda x, x对应一个 KV,选择 x[1]就是用value排序,负数是倒序
+    count_pairs = sorted(counter.items(), key=lambda x: -x[1])
+    # lambda x, x对应一个 KV,选择 x[1]就是用value排序,负数是倒序
+    # 返回值是[('花', 6), ('梦', 5), ('春', 5), ('处', 4)]
     words, _ = zip(*count_pairs)
+    # unzip words=('花', '梦', '春', '处') _=(6, 5, 5, 4)
+
 
     # 取前多少个常用字
     words = words[:len(words)] + (' ',)
