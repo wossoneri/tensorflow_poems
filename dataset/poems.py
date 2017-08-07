@@ -50,25 +50,27 @@ def process_poems(file_name):
     all_words = []
     for poem in poems:
         # 建议把'G''E'去掉
-        poem = poem.strip('GE')
-        poem = poem.replace('，', '')
-        poem = poem.replace('。', '')
+        #poem = poem.strip('GE')
+        #poem = poem.replace('，', '')
+        #poem = poem.replace('。', '')
         all_words += [word for word in poem]  # (word for word in poem) 也可
     # 这里根据包含了每个字对应的频率
     counter = collections.Counter(all_words)  # 返回得到的是 Counter({'花': 6, '梦': 5, '春': 5, '归': 4}) 的 KV对
     count_pairs = sorted(counter.items(), key=lambda x: -x[1])
     # lambda x, x对应一个 KV,选择 x[1]就是用value排序,负数是倒序
-    # 返回值是[('花', 6), ('梦', 5), ('春', 5), ('处', 4)]
+    # 返回值是[('花', 6), ('梦', 5), ('春', 5), ('处', 4)] 这个映射表应该有用
     words, _ = zip(*count_pairs)
     # unzip words=('花', '梦', '春', '处') _=(6, 5, 5, 4)
 
-
-    # 取前多少个常用字
+    # 取前多少个常用字 words[:x] 现在是全选，但为什么加一个空项？
     words = words[:len(words)] + (' ',)
     # 每个字映射为一个数字ID
     word_int_map = dict(zip(words, range(len(words))))
+    # list(map(lambda word: word_int_map.get(word, len(words)), poem)) 为什么取最后一首诗的映射表？
+    # [list_x for poem in poems] 总共有多少首诗就做出多少vector
     poems_vector = [list(map(lambda word: word_int_map.get(word, len(words)), poem)) for poem in poems]
 
+    # 返回的是 映射数字列表，映射关系词典，常用字
     return poems_vector, word_int_map, words
 
 
@@ -77,9 +79,9 @@ def generate_batch(batch_size, poems_vec, word_to_int):
     n_chunk = len(poems_vec) // batch_size
     x_batches = []
     y_batches = []
-    for i in range(n_chunk):
+    for i in range(n_chunk):  # 从0开始
         start_index = i * batch_size
-        end_index = start_index + batch_size
+        end_index = start_index + batch_size  # 这里没有减1 是因为list的截取[a:b]取得是 [a:b) 并不包含b
 
         batches = poems_vec[start_index:end_index]
         # 找到这个batch的所有poem中最长的poem的长度
@@ -99,4 +101,9 @@ def generate_batch(batch_size, poems_vec, word_to_int):
         """
         x_batches.append(x_data)
         y_batches.append(y_data)
+    # 所以最后返回的是每个item等长的列表，item是array形式， x是原始数据，y是左移后的数据
+    # 比如x_batches
+    # [array([[1, 5, 4, 3, 2, 6, 4, 3, 0]], dtype=int32),
+    #  array([[ 1, 11, 18,  7,  8, 20, 14,  9,  0]], dtype=int32),
+    #  array([[ 1, 19,  6, 10,  5,  2, 15, 12, 21, 13, 16, 23, 22, 17,  0]], dtype=int32)]
     return x_batches, y_batches
